@@ -13,24 +13,54 @@
         <h2 class="text-center mb-3">Shift Pay Calculator</h2>
 
         <form method="POST" class="card p-3 shadow-sm">
-            <table class="table table-sm table-bordered text-center align-middle">
-                <thead class="table-dark">
-                    <tr>
-                        <th>Day</th>
-                        <th>Start</th>
-                        <th>Finish</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for i in range(14) %}
-                    <tr>
-                        <td class="fw-bold">{{ days[i % 7][:3] }}</td> 
-                        <td><input type="text" class="form-control form-control-sm" name="start_time_{{ i }}" value="{{ shift_data.get('start_time_' ~ i, '') }}" placeholder="HH:MM"></td>
-                        <td><input type="text" class="form-control form-control-sm" name="finish_time_{{ i }}" value="{{ shift_data.get('finish_time_' ~ i, '') }}" placeholder="HH:MM"></td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+            <div class="row">
+                <!-- Week 1 -->
+                <div class="col-md-6">
+                    <h5 class="text-center">Week 1</h5>
+                    <table class="table table-sm table-bordered text-center align-middle">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Day</th>
+                                <th>Start</th>
+                                <th>Finish</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for i in range(7) %}
+                            <tr>
+                                <td class="fw-bold">{{ days[i][:3] }}</td>
+                                <td><input type="text" class="form-control form-control-sm" name="start_time_{{ i }}" value="{{ shift_data.get('start_time_' ~ i, '') }}" placeholder="HH:MM"></td>
+                                <td><input type="text" class="form-control form-control-sm" name="finish_time_{{ i }}" value="{{ shift_data.get('finish_time_' ~ i, '') }}" placeholder="HH:MM"></td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Week 2 -->
+                <div class="col-md-6">
+                    <h5 class="text-center">Week 2</h5>
+                    <table class="table table-sm table-bordered text-center align-middle">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Day</th>
+                                <th>Start</th>
+                                <th>Finish</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for i in range(7, 14) %}
+                            <tr>
+                                <td class="fw-bold">{{ days[i % 7][:3] }}</td>
+                                <td><input type="text" class="form-control form-control-sm" name="start_time_{{ i }}" value="{{ shift_data.get('start_time_' ~ i, '') }}" placeholder="HH:MM"></td>
+                                <td><input type="text" class="form-control form-control-sm" name="finish_time_{{ i }}" value="{{ shift_data.get('finish_time_' ~ i, '') }}" placeholder="HH:MM"></td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
             <button type="submit" class="btn btn-primary btn-sm w-100">Calculate Pay</button>
         </form>
 
