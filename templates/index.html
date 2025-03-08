@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shift Pay Calculator</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <h2>Shift Pay Calculator</h2>
+    <form method="POST">
+        <table>
+            <tr>
+                <th>Day</th>
+                <th>Start Time</th>
+                <th>Finish Time</th>
+            </tr>
+            {% for i in range(14) %}
+            <tr>
+                <td>{{ days[i % 7] }}</td>
+                <td><input type="text" name="start_time_{{ i }}" value="{{ shift_data.get('start_time_' ~ i, '') }}" placeholder="HH:MM"></td>
+                <td><input type="text" name="finish_time_{{ i }}" value="{{ shift_data.get('finish_time_' ~ i, '') }}" placeholder="HH:MM"></td>
+            </tr>
+            {% endfor %}
+        </table>
+        <button type="submit">Calculate Pay</button>
+    </form>
+
+    {% if total_summary.total_hours > 0 %}
+    <h3>Pay Breakdown:</h3>
+    <p><strong>Total Hours:</strong> {{ total_summary.total_hours }}</p>
+    <p><strong>Gross Pay:</strong> ${{ total_summary.total_pay }}</p>
+    <p><strong>Superannuation:</strong> ${{ total_summary.superannuation }}</p>
+    <p><strong>Tax:</strong> ${{ total_summary.tax }}</p>
+    <p><strong>Net Pay:</strong> ${{ total_summary.net_pay }}</p>
+    
+    <h3>Shift Allowances:</h3>
+    <p>15% Shift Allowance Hours: {{ total_summary.shift_15_hours }}</p>
+    <p>30% Shift Allowance Hours: {{ total_summary.shift_30_hours }}</p>
+    <p>Saturday Hours: {{ total_summary.saturday_hours }}</p>
+    <p>Sunday Hours: {{ total_summary.sunday_hours }}</p>
+    {% endif %}
+</body>
+</html>
