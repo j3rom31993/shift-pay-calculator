@@ -4,11 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Shift Pay Calculator</title>
-    <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .table-sm th, .table-sm td { padding: 0.3rem; }
+        .form-control-sm { height: calc(1.5em + 0.5rem + 2px); }
+    </style>
 </head>
 <body class="bg-light">
-
     <div class="container mt-3">
         <h2 class="text-center mb-3">Shift Pay Calculator</h2>
 
@@ -29,8 +31,14 @@
                             {% for i in range(7) %}
                             <tr>
                                 <td class="fw-bold">{{ days[i][:3] }}</td>
-                                <td><input type="text" class="form-control form-control-sm" name="start_time_{{ i }}" value="{{ shift_data.get('start_time_' ~ i, '') }}" placeholder="HH:MM"></td>
-                                <td><input type="text" class="form-control form-control-sm" name="finish_time_{{ i }}" value="{{ shift_data.get('finish_time_' ~ i, '') }}" placeholder="HH:MM"></td>
+                                <td><input type="text" class="form-control form-control-sm" 
+                                       name="start_time_{{ i }}" 
+                                       value="{{ shift_data.get('start_time_' ~ i, '') }}" 
+                                       placeholder="HH:MM"></td>
+                                <td><input type="text" class="form-control form-control-sm" 
+                                       name="finish_time_{{ i }}" 
+                                       value="{{ shift_data.get('finish_time_' ~ i, '') }}" 
+                                       placeholder="HH:MM"></td>
                             </tr>
                             {% endfor %}
                         </tbody>
@@ -52,46 +60,88 @@
                             {% for i in range(7, 14) %}
                             <tr>
                                 <td class="fw-bold">{{ days[i % 7][:3] }}</td>
-                                <td><input type="text" class="form-control form-control-sm" name="start_time_{{ i }}" value="{{ shift_data.get('start_time_' ~ i, '') }}" placeholder="HH:MM"></td>
-                                <td><input type="text" class="form-control form-control-sm" name="finish_time_{{ i }}" value="{{ shift_data.get('finish_time_' ~ i, '') }}" placeholder="HH:MM"></td>
+                                <td><input type="text" class="form-control form-control-sm" 
+                                       name="start_time_{{ i }}" 
+                                       value="{{ shift_data.get('start_time_' ~ i, '') }}" 
+                                       placeholder="HH:MM"></td>
+                                <td><input type="text" class="form-control form-control-sm" 
+                                       name="finish_time_{{ i }}" 
+                                       value="{{ shift_data.get('finish_time_' ~ i, '') }}" 
+                                       placeholder="HH:MM"></td>
                             </tr>
                             {% endfor %}
                         </tbody>
                     </table>
                 </div>
             </div>
-
             <button type="submit" class="btn btn-primary btn-sm w-100">Calculate Pay</button>
         </form>
 
         {% if total_summary.total_hours > 0 %}
         <div class="card mt-3 p-3 shadow-sm">
-            <h4 class="text-center">Pay Breakdown</h4>
+            <h4 class="text-center">Pay Summary</h4>
             <table class="table table-sm">
                 <tbody>
-                    <tr><td><strong>Total Hours</strong></td><td>{{ total_summary.total_hours }}</td></tr>
-                    <tr><td><strong>Gross Pay</strong></td><td>${{ total_summary.total_pay }}</td></tr>
-                    <tr><td><strong>Superannuation</strong></td><td>${{ total_summary.superannuation }}</td></tr>
-                    <tr><td><strong>Tax</strong></td><td>${{ total_summary.tax }}</td></tr>
-                    <tr><td><strong>Net Pay</strong></td><td>${{ total_summary.net_pay }}</td></tr>
+                    <tr>
+                        <td><strong>Total Hours</strong></td>
+                        <td>{{ total_summary.total_hours }}</td>
+                        <td class="text-end"><strong>Gross Pay:</strong></td>
+                        <td class="text-end">${{ total_summary.total_pay }}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Superannuation</strong></td>
+                        <td>${{ total_summary.superannuation }}</td>
+                        <td class="text-end"><strong>Tax:</strong></td>
+                        <td class="text-end">${{ total_summary.tax }}</td>
+                    </tr>
+                    <tr class="table-primary">
+                        <td colspan="3"><strong>Net Pay</strong></td>
+                        <td class="text-end fw-bold">${{ total_summary.net_pay }}</td>
+                    </tr>
                 </tbody>
             </table>
 
-            <h5 class="text-center mt-2">Shift Allowances</h5>
+            <h5 class="text-center mt-4">Detailed Breakdown</h5>
             <table class="table table-sm">
+                <thead class="table-light">
+                    <tr>
+                        <th>Category</th>
+                        <th>Hours</th>
+                        <th class="text-end">Amount</th>
+                    </tr>
+                </thead>
                 <tbody>
-                    <tr><td>15% Shift Allowance</td><td>{{ total_summary.shift_15_hours }} hrs</td></tr>
-                    <tr><td>30% Shift Allowance</td><td>{{ total_summary.shift_30_hours }} hrs</td></tr>
-                    <tr><td>Saturday Hours</td><td>{{ total_summary.saturday_hours }} hrs</td></tr>
-                    <tr><td>Sunday Hours</td><td>{{ total_summary.sunday_hours }} hrs</td></tr>
+                    <tr>
+                        <td>Standard Hours</td>
+                        <td>{{ total_summary.standard_hours }}</td>
+                        <td class="text-end">${{ total_summary.standard_pay }}</td>
+                    </tr>
+                    <tr>
+                        <td>15% Shift Allowance</td>
+                        <td>{{ total_summary.shift_15_hours }}</td>
+                        <td class="text-end">${{ total_summary.shift_15_pay }}</td>
+                    </tr>
+                    <tr>
+                        <td>30% Shift Allowance</td>
+                        <td>{{ total_summary.shift_30_hours }}</td>
+                        <td class="text-end">${{ total_summary.shift_30_pay }}</td>
+                    </tr>
+                    <tr>
+                        <td>Saturday Hours</td>
+                        <td>{{ total_summary.saturday_hours }}</td>
+                        <td class="text-end">${{ total_summary.saturday_pay }}</td>
+                    </tr>
+                    <tr>
+                        <td>Sunday Hours</td>
+                        <td>{{ total_summary.sunday_hours }}</td>
+                        <td class="text-end">${{ total_summary.sunday_pay }}</td>
+                    </tr>
                 </tbody>
             </table>
         </div>
         {% endif %}
     </div>
 
-    <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-
 </body>
 </html>
