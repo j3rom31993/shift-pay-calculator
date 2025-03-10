@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, session
 from datetime import datetime, timedelta
 
+
 app = Flask(__name__)
 app.secret_key = "supersecretkey"  # Used to store session data
 
