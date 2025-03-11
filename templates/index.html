@@ -8,12 +8,29 @@
     <style>
         .table-sm th, .table-sm td { padding: 0.3rem; }
         .form-control-sm { height: calc(1.5em + 0.5rem + 2px); }
+        .autofill-badge { font-size: 0.75em; right: 5px; top: 5px; }
+        .preset-btn { min-width: 120px; }
+        #bulkEntry::placeholder { color: #666; font-style: italic; }
     </style>
 </head>
 <body class="bg-light">
     <div class="container mt-3">
         <h2 class="text-center mb-3">Shift Pay Calculator</h2>
 
+        <!-- Bulk Entry Section -->
+        <div class="card mb-3 shadow-sm">
+            <div class="card-body">
+                <h5>📋 Quick Bulk Entry</h5>
+                <textarea class="form-control mb-2" id="bulkEntry" name="bulk_entry" rows="5" 
+                      placeholder="Paste your finish times (one per line):&#10;1:11am&#10;1:56am&#10;&#10;12:31am&#10;1:38am&#10;&#10;1:00am&#10;1:36am">{{ bulk_entry }}</textarea>
+                <button class="btn btn-sm btn-outline-primary" onclick="parseBulkEntry()">
+                    Auto-Fill from Notes
+                </button>
+                <small class="text-muted d-block mt-1">Empty lines = no shift that day</small>
+            </div>
+        </div>
+
+        <!-- Main Form -->
         <form method="POST" class="card p-3 shadow-sm">
             <div class="row">
                 <!-- Week 1 -->
@@ -21,24 +38,23 @@
                     <h5 class="text-center">Week 1</h5>
                     <table class="table table-sm table-bordered text-center align-middle">
                         <thead class="table-dark">
-                            <tr>
-                                <th>Day</th>
-                                <th>Start</th>
-                                <th>Finish</th>
-                            </tr>
+                            <tr><th>Day</th><th>Start</th><th>Finish</th></tr>
                         </thead>
                         <tbody>
                             {% for i in range(7) %}
                             <tr>
                                 <td class="fw-bold">{{ days[i][:3] }}</td>
-                                <td><input type="text" class="form-control form-control-sm" 
-                                       name="start_time_{{ i }}" 
-                                       value="{{ shift_data.get('start_time_' ~ i, '') }}" 
-                                       placeholder="HH:MM"></td>
-                                <td><input type="text" class="form-control form-control-sm" 
-                                       name="finish_time_{{ i }}" 
-                                       value="{{ shift_data.get('finish_time_' ~ i, '') }}" 
-                                       placeholder="HH:MM"></td>
+                                <td class="position-relative">
+                                    <input type="time" class="form-control form-control-sm" 
+                                           name="start_time_{{ i }}" 
+                                           value="{{ shift_data.get('start_time_' ~ i, '') }}">
+                                    <span class="position-absolute autofill-badge text-muted">auto</span>
+                                </td>
+                                <td>
+                                    <input type="time" class="form-control form-control-sm finish-time" 
+                                           name="finish_time_{{ i }}" 
+                                           value="{{ shift_data.get('finish_time_' ~ i, '') }}">
+                                </td>
                             </tr>
                             {% endfor %}
                         </tbody>
@@ -50,31 +66,40 @@
                     <h5 class="text-center">Week 2</h5>
                     <table class="table table-sm table-bordered text-center align-middle">
                         <thead class="table-dark">
-                            <tr>
-                                <th>Day</th>
-                                <th>Start</th>
-                                <th>Finish</th>
-                            </tr>
+                            <tr><th>Day</th><th>Start</th><th>Finish</th></tr>
                         </thead>
                         <tbody>
                             {% for i in range(7, 14) %}
                             <tr>
                                 <td class="fw-bold">{{ days[i % 7][:3] }}</td>
-                                <td><input type="text" class="form-control form-control-sm" 
-                                       name="start_time_{{ i }}" 
-                                       value="{{ shift_data.get('start_time_' ~ i, '') }}" 
-                                       placeholder="HH:MM"></td>
-                                <td><input type="text" class="form-control form-control-sm" 
-                                       name="finish_time_{{ i }}" 
-                                       value="{{ shift_data.get('finish_time_' ~ i, '') }}" 
-                                       placeholder="HH:MM"></td>
+                                <td class="position-relative">
+                                    <input type="time" class="form-control form-control-sm" 
+                                           name="start_time_{{ i }}" 
+                                           value="{{ shift_data.get('start_time_' ~ i, '') }}">
+                                    <span class="position-absolute autofill-badge text-muted">auto</span>
+                                </td>
+                                <td>
+                                    <input type="time" class="form-control form-control-sm finish-time" 
+                                           name="finish_time_{{ i }}" 
+                                           value="{{ shift_data.get('finish_time_' ~ i, '') }}">
+                                </td>
                             </tr>
                             {% endfor %}
                         </tbody>
                     </table>
                 </div>
             </div>
-            <button type="submit" class="btn btn-primary btn-sm w-100">Calculate Pay</button>
+
+            <!-- Control Buttons -->
+            <div class="d-flex gap-2 mt-2">
+                <button type="button" class="btn btn-sm btn-danger w-50" 
+                        onclick="clearAllData()">
+                    🗑️ Clear All
+                </button>
+                <button type="submit" class="btn btn-sm btn-primary w-50">
+                    💰 Calculate Pay
+                </button>
+            </div>
         </form>
 
         {% if total_summary.total_hours > 0 %}
@@ -86,17 +111,17 @@
                         <td><strong>Total Hours</strong></td>
                         <td>{{ total_summary.total_hours }}</td>
                         <td class="text-end"><strong>Gross Pay:</strong></td>
-                        <td class="text-end">${{ total_summary.total_pay }}</td>
+                        <td class="text-end">${{ "%.2f"|format(total_summary.total_pay) }}</td>
                     </tr>
                     <tr>
                         <td><strong>Superannuation</strong></td>
-                        <td>${{ total_summary.superannuation }}</td>
+                        <td>${{ "%.2f"|format(total_summary.superannuation) }}</td>
                         <td class="text-end"><strong>Tax:</strong></td>
-                        <td class="text-end">${{ total_summary.tax }}</td>
+                        <td class="text-end">${{ "%.2f"|format(total_summary.tax) }}</td>
                     </tr>
                     <tr class="table-primary">
                         <td colspan="3"><strong>Net Pay</strong></td>
-                        <td class="text-end fw-bold">${{ total_summary.net_pay }}</td>
+                        <td class="text-end fw-bold">${{ "%.2f"|format(total_summary.net_pay) }}</td>
                     </tr>
                 </tbody>
             </table>
@@ -113,35 +138,114 @@
                 <tbody>
                     <tr>
                         <td>Standard Hours</td>
-                        <td>{{ total_summary.standard_hours }}</td>
-                        <td class="text-end">${{ total_summary.standard_pay }}</td>
+                        <td>{{ "%.2f"|format(total_summary.standard_hours) }}</td>
+                        <td class="text-end">${{ "%.2f"|format(total_summary.standard_pay) }}</td>
                     </tr>
                     <tr>
                         <td>15% Shift Allowance</td>
-                        <td>{{ total_summary.shift_15_hours }}</td>
-                        <td class="text-end">${{ total_summary.shift_15_pay }}</td>
+                        <td>{{ "%.2f"|format(total_summary.shift_15_hours) }}</td>
+                        <td class="text-end">${{ "%.2f"|format(total_summary.shift_15_pay) }}</td>
                     </tr>
                     <tr>
                         <td>30% Shift Allowance</td>
-                        <td>{{ total_summary.shift_30_hours }}</td>
-                        <td class="text-end">${{ total_summary.shift_30_pay }}</td>
+                        <td>{{ "%.2f"|format(total_summary.shift_30_hours) }}</td>
+                        <td class="text-end">${{ "%.2f"|format(total_summary.shift_30_pay) }}</td>
                     </tr>
                     <tr>
                         <td>Saturday Hours</td>
-                        <td>{{ total_summary.saturday_hours }}</td>
-                        <td class="text-end">${{ total_summary.saturday_pay }}</td>
+                        <td>{{ "%.2f"|format(total_summary.saturday_hours) }}</td>
+                        <td class="text-end">${{ "%.2f"|format(total_summary.saturday_pay) }}</td>
                     </tr>
                     <tr>
                         <td>Sunday Hours</td>
-                        <td>{{ total_summary.sunday_hours }}</td>
-                        <td class="text-end">${{ total_summary.sunday_pay }}</td>
+                        <td>{{ "%.2f"|format(total_summary.sunday_hours) }}</td>
+                        <td class="text-end">${{ "%.2f"|format(total_summary.sunday_pay) }}</td>
                     </tr>
                 </tbody>
             </table>
         </div>
         {% endif %}
+
+        <!-- QR Code Section -->
+        <div class="text-center mt-4">
+            <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data={{ request.url }}" 
+                 class="img-thumbnail mt-2" 
+                 style="width: 120px">
+            <p class="text-muted small mt-2">📱 Scan to open on phone</p>
+        </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Bulk entry parser
+        function parseBulkEntry() {
+            const lines = document.getElementById('bulkEntry').value.split('\n');
+            let lineIndex = 0;
+            
+            document.querySelectorAll('.finish-time').forEach((input, index) => {
+                if(lineIndex >= lines.length) return;
+                
+                const line = lines[lineIndex].trim();
+                lineIndex++;
+                
+                if(line) {
+                    const finish = convertTo24Hour(line);
+                    if(finish) {
+                        input.value = finish;
+                        const startInput = input.closest('tr').querySelector('[name^="start_time"]');
+                        startInput.value = '17:00';
+                        localStorage.setItem(input.name, finish);
+                        localStorage.setItem(startInput.name, '17:00');
+                    }
+                }
+            });
+        }
+
+        // Time conversion helper
+        function convertTo24Hour(time) {
+            const match = time.match(/(\d{1,2}):(\d{2})\s*([ap])?m?/i);
+            if(!match) return '';
+            
+            let hour = parseInt(match[1]);
+            const min = match[2];
+            const period = match[3]?.toLowerCase();
+
+            if(period === 'p' && hour < 12) hour += 12;
+            if(period === 'a' && hour === 12) hour = 0;
+
+            return `${String(hour).padStart(2, '0')}:${min}`;
+        }
+
+        // Auto-set start time when finish time changes
+        document.querySelectorAll('.finish-time').forEach(input => {
+            input.addEventListener('change', function() {
+                const startInput = this.closest('tr').querySelector('[name^="start_time"]');
+                startInput.value = this.value ? '17:00' : '';
+                localStorage.setItem(this.name, this.value);
+                localStorage.setItem(startInput.name, startInput.value);
+            });
+        });
+
+        // Clear all data
+        function clearAllData() {
+            localStorage.clear();
+            document.querySelectorAll('input').forEach(input => input.value = '');
+            document.getElementById('bulkEntry').value = '';
+            window.location.reload();
+        }
+
+        // Load saved data
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('input').forEach(input => {
+                input.value = localStorage.getItem(input.name) || '';
+            });
+            document.getElementById('bulkEntry').value = localStorage.getItem('bulk_entry') || '';
+        });
+
+        // Save bulk entry content
+        document.getElementById('bulkEntry').addEventListener('input', function() {
+            localStorage.setItem('bulk_entry', this.value);
+        });
+    </script>
 </body>
 </html>
